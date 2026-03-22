@@ -86,14 +86,6 @@ const MODULES = [
     accent: "#7ec8ff",
     icon: "◉",
   },
-  {
-    id: "coming",
-    label: "More soon",
-    sub: "",
-    accent: "#2a4060",
-    icon: "···",
-    disabled: true,
-  },
 ];
 
 function Home({ onSelect }) {
@@ -1095,3 +1087,4 @@ export default function App() {
     </>
   );
 }
+
