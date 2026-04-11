@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── SHARED STYLES ───────────────────────────────────────────────────────────
@@ -441,7 +439,7 @@ const PHRASES = [
   { text: "I repeat", size: "sm", weight: 300, color: "#5a7a9a" },
   { text: "There is NO danger here", size: "xl", weight: 700, color: "#7ec8c8" },
   { text: "So", size: "md", weight: 300 },
-  { text: "You can sit down", size: "lg", weight: 400 },
+  { text: "You can stand down", size: "lg", weight: 400 },
   { text: "Thinking brain will take over from here", size: "md", weight: 300 },
   { text: "These feelings I have", size: "md", weight: 300 },
   { text: "Are annoying", size: "lg", weight: 500 },
@@ -1087,4 +1085,3 @@ export default function App() {
     </>
   );
 }
-
