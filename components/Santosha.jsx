@@ -205,7 +205,14 @@ function ModuleCard({ module: m, index, onSelect }) {
 
 // ─── BREATHE MODULE ───────────────────────────────────────────────────────────
 
-const INHALE = 4, EXHALE = 6, CYCLE = 10, TOTAL = 180, PREP = 5;
+const TOTAL = 180, PREP = 5;
+
+// Every pattern keeps the out breath at least as long as the in breath.
+const PATTERNS = [
+  { inhale: 4, exhale: 6 },  // default
+  { inhale: 5, exhale: 7 },
+  { inhale: 6, exhale: 6 },
+];
 const CX = 160, CY = 160, SVG_SIZE = 320;
 const SESSION_R = 130, SESSION_STROKE = 7;
 const SESSION_CIRC = 2 * Math.PI * SESSION_R;
@@ -215,7 +222,12 @@ function Breathe({ onBack }) {
   const [score, setScore] = useState(0);
   const [tapCount, setTapCount] = useState(0);
   const [tapFeedback, setTapFeedback] = useState(null);
+  const [patternIdx, setPatternIdx] = useState(0);
   const { particles, burst } = useConfetti();
+
+  const pattern = PATTERNS[patternIdx];
+  const patternRef = useRef(pattern);
+  patternRef.current = pattern;
 
   const startRef = useRef(null);
   const rafRef = useRef(null);
@@ -248,11 +260,12 @@ function Breathe({ onBack }) {
   const runGame = useCallback(() => {
     stopRaf();
     const tick = () => {
+      const { inhale, exhale } = patternRef.current;
       const elapsed = (performance.now() - startRef.current) / 1000;
       const total = Math.min(elapsed, TOTAL);
-      const cycle = total % CYCLE;
-      const isIn = cycle < INHALE;
-      const pt = isIn ? cycle : cycle - INHALE;
+      const cycle = total % (inhale + exhale);
+      const isIn = cycle < inhale;
+      const pt = isIn ? cycle : cycle - inhale;
       const sessionProg = Math.min(total / TOTAL, 1);
 
       if (bgRef.current) {
@@ -268,7 +281,7 @@ function Breathe({ onBack }) {
         phaseTextRef.current.textContent = isIn ? "BREATHE IN" : "BREATHE OUT";
         phaseTextRef.current.style.fill = isIn ? "#FF7F7F" : "#00CED1";
       }
-      if (tapHintRef.current) tapHintRef.current.textContent = isIn ? "tap at 4" : "tap at 6";
+      if (tapHintRef.current) tapHintRef.current.textContent = `tap at ${isIn ? inhale : exhale}`;
       if (total >= TOTAL) { setScreen("done"); return; }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -290,11 +303,12 @@ function Breathe({ onBack }) {
 
   const handleTap = useCallback((e) => {
     if (screenRef.current !== "running") return;
+    const { inhale, exhale } = patternRef.current;
     const elapsed = (performance.now() - startRef.current) / 1000;
-    const cycle = elapsed % CYCLE;
-    const isIn = cycle < INHALE;
-    const pt = isIn ? cycle : cycle - INHALE;
-    const target = isIn ? INHALE : EXHALE;
+    const cycle = elapsed % (inhale + exhale);
+    const isIn = cycle < inhale;
+    const pt = isIn ? cycle : cycle - inhale;
+    const target = isIn ? inhale : exhale;
     const dist = Math.min(Math.abs(pt - target), pt);
     const pts = dist <= 1 ? Math.max(0, Math.round(100 - dist * 100)) : 0;
     const perfect = dist < 0.1;
@@ -343,9 +357,30 @@ function Breathe({ onBack }) {
           </p>
           <div style={{ fontSize: 13, lineHeight: 2.4, marginBottom: 8 }}>
             <span style={{ color: "#FF7F7F" }}>●</span>
-            <span style={{ color: "#4a6a8a" }}> Breathe in · 4 seconds</span><br />
+            <span style={{ color: "#4a6a8a" }}> Breathe in · {pattern.inhale} seconds</span><br />
             <span style={{ color: "#00CED1" }}>●</span>
-            <span style={{ color: "#4a6a8a" }}> Breathe out · 6 seconds</span>
+            <span style={{ color: "#4a6a8a" }}> Breathe out · {pattern.exhale} seconds</span>
+          </div>
+
+          {/* Pattern picker */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 22 }}>
+            {PATTERNS.map((p, i) => {
+              const selected = i === patternIdx;
+              return (
+                <button key={i}
+                  onClick={(e) => { e.stopPropagation(); setPatternIdx(i); }}
+                  style={{
+                    padding: "8px 18px", borderRadius: 50,
+                    background: selected ? "#FF7F7F14" : "transparent",
+                    border: `1px solid ${selected ? "#FF7F7F88" : "#16304f"}`,
+                    color: selected ? "#e0f0ff" : "#3a5a7a",
+                    fontSize: 13, letterSpacing: 2, cursor: "pointer",
+                    fontFamily: FONT, transition: "all 0.25s ease",
+                  }}>
+                  {p.inhale} · {p.exhale}
+                </button>
+              );
+            })}
           </div>
           <button onClick={(e) => { e.stopPropagation(); beginPrep(); }} style={{
             marginTop: 28, padding: "13px 44px", background: "transparent",
@@ -387,7 +422,7 @@ function Breathe({ onBack }) {
               <text ref={phaseTextRef} x={CX} y={CY + 42} textAnchor="middle"
                 style={{ fontSize: 11, letterSpacing: 4, fill: "#FF7F7F", fontFamily: FONT }}>BREATHE IN</text>
               <text ref={tapHintRef} x={CX} y={CY + 62} textAnchor="middle"
-                style={{ fontSize: 10, fill: "#2a4a6a", fontFamily: FONT, letterSpacing: 1 }}>tap at 4</text>
+                style={{ fontSize: 10, fill: "#2a4a6a", fontFamily: FONT, letterSpacing: 1 }}>tap at {pattern.inhale}</text>
             </g>
           </svg>
           <div style={{ height: 36, position: "relative", width: 220, textAlign: "center" }}>
